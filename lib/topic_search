@@ -1,0 +1,118 @@
+Caching in Flutter helps improve performance by storing frequently used data,
+ reducing the need for repeated network calls or expensive computations. 
+ There are different types of caching in Flutter:
+
+
+1. Memory Caching
+Stores data in memory for quick access.
+Best for short-lived data.
+Example: Using a map to cache API responses.
+dart
+Copy
+Edit
+class MemoryCache {
+  static final Map<String, dynamic> _cache = {};
+
+  static void save(String key, dynamic value) {
+    _cache[key] = value;
+  }
+
+  static dynamic get(String key) {
+    return _cache[key];
+  }
+}
+---------------------------------------------------------
+2. Disk Caching (Shared Preferences)
+Stores simple key-value data persistently.
+Ideal for user preferences or lightweight data.
+Uses the shared_preferences package.
+
+
+
+import 'package:shared_preferences/shared_preferences.dart';
+
+Future<void> saveData(String key, String value) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString(key, value);
+}
+
+Future<String?> getData(String key) async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getString(key);
+} 
+-------------------------------------------------------------
+3. File-Based Caching
+Saves data as files in the app’s storage.
+Good for images, JSON responses, or large data.
+Uses the path_provider package.
+
+
+
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+
+Future<File> _getLocalFile(String filename) async {
+  final directory = await getApplicationDocumentsDirectory();
+  return File('${directory.path}/$filename');
+}
+
+Future<void> saveToFile(String filename, String data) async {
+  final file = await _getLocalFile(filename);
+  await file.writeAsString(data);
+}
+
+Future<String?> readFromFile(String filename) async {
+  try {
+    final file = await _getLocalFile(filename);
+    return await file.readAsString();
+  } catch (e) {
+    return null;
+  }
+}
+------------------------------------------------
+4. Database Caching (Hive, SQLite)
+Stores structured data persistently.
+Ideal for complex data structures or offline storage.
+Example using Hive:
+
+
+
+import 'package:hive/hive.dart';
+
+Future<void> saveData(String key, String value) async {
+  var box = await Hive.openBox('cacheBox');
+  box.put(key, value);
+}
+
+Future<String?> getData(String key) async {
+  var box = await Hive.openBox('cacheBox');
+  return box.get(key);
+}
+--------------------------------------------------------
+5. Image Caching
+Flutter caches network images automatically with CachedNetworkImage.
+
+
+
+import 'package:cached_network_image/cached_network_image.dart';
+
+CachedNetworkImage(
+  imageUrl: 'https://example.com/image.jpg',
+  placeholder: (context, url) => CircularProgressIndicator(),
+  errorWidget: (context, url, error) => Icon(Icons.error),
+);
+------------------------------------------------------------
+6. API Response Caching (Dio + CacheInterceptor)
+
+Caches API responses using the dio package.
+  
+
+import 'package:dio/dio.dart';
+import 'package:dio_http_cache/dio_http_cache.dart';
+
+Dio dio = Dio();
+dio.interceptors.add(DioCacheManager(CacheConfig()).interceptor);
+
+Future<Response> fetchData(String url) async {
+  return await dio.get(url, options: buildCacheOptions(Duration(days: 7)));
+}
